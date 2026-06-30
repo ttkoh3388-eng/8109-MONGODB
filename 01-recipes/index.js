@@ -5,6 +5,9 @@ require('dotenv').config();
 
 const app = express();
 
+// use JSON rerquests (prevent req.body is undefined)
+app.use(express.json());
+
 async function main() {
 
     const db = await connect(process.env.MONGO_URI, "8109_recipes");
@@ -52,6 +55,29 @@ async function main() {
         });
 
     })
+
+    app.post("/api/recipes", async function(req, res){
+        // add the new recipe from the request's body
+        const newRecipe = req.body;
+        
+        // find the cuisine and associate the recipe with the cuisine
+        const cuisine = await db.collection("cuisines").findOne({ 
+            name: newRecipe.cuisine });
+
+        const tags = await db.collection("tags").find({ 
+            name: { $in: req.body.tags } 
+        }).toArray();
+        
+        // replace the newRecipe's cuisine and tags with the ones from the database
+        newRecipe.cuisine = cuisine;
+        newRecipe.tags = tags;
+        
+        const response = await db.collection("recipes").insertOne(newRecipe);
+        res.json({
+            message: "Recipe added successfully",
+            recipeId: response.insertedId
+        });
+    });
 }
 main();
 
