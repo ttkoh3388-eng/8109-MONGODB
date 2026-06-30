@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { connect } = require('./db');
+const { ObjectId } = require('mongodb');
 require('dotenv').config();
 
 const app = express();
@@ -71,11 +72,23 @@ async function main() {
         // replace the newRecipe's cuisine and tags with the ones from the database
         newRecipe.cuisine = cuisine;
         newRecipe.tags = tags;
-        
+                
         const response = await db.collection("recipes").insertOne(newRecipe);
         res.json({
             message: "Recipe added successfully",
             recipeId: response.insertedId
+        });
+    })
+
+    app.delete("/api/recipes/:recipeId", async function(req, res){
+        const recipeId = req.params.recipeId;
+
+        // delete one document which has the _id equal to the recipeId
+        const result = await db.collection("recipes").deleteOne({
+             _id: new ObjectId(recipeId) 
+            })
+        res.json({
+            message: "Recipe deleted successfully"
         });
     });
 }
