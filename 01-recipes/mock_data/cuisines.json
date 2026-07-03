@@ -2,18 +2,20 @@
     {
         
         "_id": {"$oid": "64b8f1e2f1c2a3b4d5e6f7a1"},
-        "name": "Italian",
-        "description": "Italian cuisine is known for its regional diversity, especially between the north and the south of the Italian peninsula. It offers an abundance of taste, and is one of the most popular in the world."
+        "name": "Italian"
     },
-    {
-        "_id": {"$oid": "64b8f1e2f1c2a3b4d5e6f7a2"},
-        "name": "Indian",
-        "description": "Indian cuisine is diverse and varies by region, but it generally emphasizes fresh ingredients, bold flavors, and a balance of textures. It includes a wide range of dishes from stir-fries to dumplings."
+        
+    {   "_id": {"$oid": "64b8f1e2f1c2a3b4d5e6f7a2"},
+        "name": "Indian"
     },
+        
+    {     "_id": {"$oid": "64b8f1e2f1c2a3b4d5e6f7a3"},
+        "name": "Mexican"
+},
     {
-        "_id": {"$oid": "64b8f1e2f1c2a3b4d5e6f7a3"},
-        "name": "Mexican",
-        "description": "Mexican cuisine is known for its vibrant flavors, colorful presentation, and use of fresh ingredients. It often features corn, beans, chili peppers, and a variety of spices."
+          "_id": {"$oid": "64b8f1e2f1c2a3b4d5e6f7a4"},
+        "name": "Chinese"
+        
     }
 ]
        
