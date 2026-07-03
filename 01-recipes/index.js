@@ -5,6 +5,7 @@ const { ObjectId } = require('mongodb');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
+const { generateRecipe } = require('./gemini');
 
 function generateAccessToken(id) {
     // arg 1: the claims, or the payload 
@@ -233,8 +234,49 @@ async function main() {
             })
     })
 
-}
+    app.post('/api/ai/recipes', async function(req, res) {
+        
+        const allCuisines = await db.collection("cuisines").find().toArray();
+        const allTags = await db.collection("tags").find().toArray();
+        const recipe = await generateRecipe(
+            req.body.recipeText,
+            allCuisines,
+            allTags
+        );
 
+        // check if the recipe's cuisine is valid
+        const cuisine = await db.collection("cuisines").findOne({ 
+            _id: new objectId(recipe.cuisine._id.$oid),
+            name: recipe.cuisine.name
+        });
+
+        if (!cuisine) {
+            res.status(500).json({
+                "error": `${recipe.cuisine.name} is chosen by the AI but is not in the system`
+            })
+        }
+
+        for (let tags of recipe.tags) {
+            const tagDoc = await db.collection("tags").findOne({ 
+                _id: new objectId(tags._id.$oid),
+                name: tags.name
+            });
+            // if the tag document not found
+            if (!tagDoc) {
+                return res.status(500).json({
+                    "message": `${tag.name} is chosen by the AI but is not in the system`
+                });
+            }
+        }
+
+        const recipeId = await db.collection("recipes").insertOne(recipe);
+
+        res.json({ 
+            "message": "New recipe inserted. from natural text by AI",
+            "recipeId": result.insertedId
+        });
+    })
+}
 main();
 
 app.listen(3000, function(){
