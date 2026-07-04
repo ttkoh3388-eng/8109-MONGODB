@@ -5,7 +5,7 @@ const { ObjectId } = require('mongodb');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
-const { generateRecipe } = require('./gemini');
+const { generateRecipe, generateSearchParameters } = require('./gemini');
 
 function generateAccessToken(id) {
     // arg 1: the claims, or the payload 
@@ -65,6 +65,9 @@ async function main() {
     // the req.query can contain following parameters
     // name: string pattern for the name 
     // tags: a comma delimited string list, eg. "easy,spicy"
+    // cuisines: search by cuisine
+    // ingredients search a comma delimited list
+    // ?name=chicken&cuisine=Chinese&ingredients=chicken&tags=easy
     app.get("/api/recipes", async function(req, res){
 
         const criteria = {};
@@ -238,6 +241,7 @@ async function main() {
         
         const allCuisines = await db.collection("cuisines").find().toArray();
         const allTags = await db.collection("tags").find().toArray();
+        const allingredients = await db.collection("recipes").distinct("ingredients.name");
         const recipe = await generateRecipe(
             req.body.recipeText,
             allCuisines,
@@ -246,7 +250,7 @@ async function main() {
 
         // check if the recipe's cuisine is valid
         const cuisine = await db.collection("cuisines").findOne({ 
-            _id: new objectId(recipe.cuisine._id.$oid),
+            _id: new ObjectId(recipe.cuisine._id.$oid),
             name: recipe.cuisine.name
         });
 
@@ -258,7 +262,7 @@ async function main() {
 
         for (let tags of recipe.tags) {
             const tagDoc = await db.collection("tags").findOne({ 
-                _id: new objectId(tags._id.$oid),
+                _id: new ObjectId(tags._id.$oid),
                 name: tags.name
             });
             // if the tag document not found
@@ -273,10 +277,27 @@ async function main() {
 
         res.json({ 
             "message": "New recipe inserted. from natural text by AI",
-            "recipeId": result.insertedId
+            "recipeId": recipeId.insertedId
         });
     })
+
+    app.get('/api/ai/recipes', async function(req, res) {
+        const allCuisines = await db.collection("cuisines").find().toArray();
+        const allTags = await db.collection("tags").find().toArray();
+        const allingredients = await db.collection("recipes").distinct("ingredients.name");
+
+        const searchParameters = await generateSearchParameters(
+            req.query.searchQuery,
+            allCuisines,
+            allTags,
+            allingredients
+        );
+
+        res.json({ searchParameters });
+    })
+
 }
+
 main();
 
 app.listen(3000, function(){
