@@ -285,15 +285,47 @@ async function main() {
         const allCuisines = await db.collection("cuisines").find().toArray();
         const allTags = await db.collection("tags").find().toArray();
         const allingredients = await db.collection("recipes").distinct("ingredients.name");
-
-        const searchParameters = await generateSearchParameters(
+        const searchParams = await generateSearchParameters(
             req.query.searchQuery,
             allCuisines,
             allTags,
             allingredients
         );
+        // for testing
+        // res.json({ searchParameters });
+        const criteria = {};
+        if (searchParams.name) {
+            criteria.name = { 
+                $regex: searchParams.name, 
+                $options: 'i' };
+        }
 
-        res.json({ searchParameters });
+        if (searchParams.tags) {
+            const wantedtags = searchParams.tags.split(',');
+            criteria['tags.name'] = { "$in": wantedtags };
+        }
+
+        if (searchParams.cuisine) {
+            criteria['cuisine.name'] = { 
+                $regex: searchParams.cuisine, 
+                $options: 'i' };
+        }
+        // we'll expect req.query.ingredients to be a comma delimited strings
+        // "chicken,flour,eggs".split(",") => ["chicken", "flour", "eggs"]
+        if (searchParams.ingredients) {
+            const wantedingredients = searchParams.ingredients.split(',');
+            const regexArray = [];
+
+            for (const ingredient of wantedingredients) {
+                regexArray.push(new RegExp(ingredient, 'i'));
+            }
+            criteria['ingredients.name'] = { "$all": regexArray };
+        }
+
+        const recipes = await db.collection("recipes").find(criteria).toArray();
+        res.json({
+            recipes: recipes
+        })
     })
 
 }

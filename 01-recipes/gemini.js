@@ -9,7 +9,6 @@ async function generateRecipe(recipeText, availableCuisines, availableTags, avai
 
 
     const schema = {
-        "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "Recipe",
         "type": "object",
         "properties": {
@@ -132,38 +131,35 @@ async function generateRecipe(recipeText, availableCuisines, availableTags, avai
     return recipe;
 }
 
-async function generateSearchParameters(searchQuery, availableCuisines, availableTags) {
-    const scheme = `{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Recipe Search Query",
-  "description": "Query parameters for searching recipes",
-  "type": "object",
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "Recipe name to search for (case-insensitive, partial match)",
-      "examples": ["chocolate cake", "pasta"]
-    },
-    "tags": {
-      "type": "string",
-      "description": "Comma-separated list of tag names to filter recipes (exact match, case-insensitive)",
-      "examples": ["vegetarian,gluten-free", "dinner,quick"]
-    },
-    "cuisine": {
-      "type": "string",
-      "description": "Cuisine name to search for (case-insensitive, partial match)",
-      "examples": ["italian", "mexican"]
-    },
-    "ingredients": {
-      "type": "string",
-      "description": "Comma-separated list of ingredients that must all be present in the recipe (case-insensitive)",
-      "examples": ["chicken,flour,eggs", "tomato,cheese,basil"]
-    }
-  },
-  "additionalProperties": false
-}
-    
-    `
+async function generateSearchParameters(searchQuery, availableCuisines, availableTags, availableIngredients) {
+    const scheme = {
+      title: "Recipe Search Query",
+      description: "Query parameters for searching recipes",
+      type: "object",
+      properties: {
+        name: {
+          type: "string",
+          description: "Recipe name to search for (case-insensitive, partial match)",
+          examples: ["chocolate cake", "pasta"]
+        },
+        tags: {
+          type: "string",
+          description: "Comma-separated list of tag names to filter recipes (exact match, case-insensitive)",
+          examples: ["vegetarian,gluten-free", "dinner,quick"]
+        },
+        cuisine: {
+          type: "string",
+          description: "Cuisine name to search for (case-insensitive, partial match)",
+          examples: ["italian", "mexican"]
+        },
+        ingredients: {
+          type: "string",
+          description: "Comma-separated list of ingredients that must all be present in the recipe (case-insensitive)",
+          examples: ["chicken,flour,eggs", "tomato,cheese,basil"]
+        }
+      },
+      additionalProperties: false
+    };
     const prompt = `
         You are a recipe search query parser. Convert the user's natural search query to a JSON object, using
         the available tags and cuisines and ONLY following tags and cuisines. 
@@ -173,9 +169,9 @@ async function generateSearchParameters(searchQuery, availableCuisines, availabl
     
         Available cuisines: ${JSON.stringify(availableCuisines)}
         Available tags: ${JSON.stringify(availableTags)}
-        Available ingredients: ${JSON.stringify(availableingredients)}
+        Available ingredients: ${JSON.stringify(availableIngredients)}
 
-        Convert the natural text using the following schema: ${scheme}
+        Convert the natural text using the following schema: ${JSON.stringify(scheme, null, 2)}
 
         Rules:
         - Return only valid JSON, no explanation, no code fences 
